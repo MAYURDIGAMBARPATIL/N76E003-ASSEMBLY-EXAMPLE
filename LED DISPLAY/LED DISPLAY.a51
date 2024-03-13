@@ -1,0 +1,75 @@
+ORG 00H
+	
+	P0M1 EQU 0B1H
+	P0M2 EQU 0B2H
+	P1M1 EQU 0B3H
+	P1M2 EQU 0B4H
+	
+		MOV P0M1, #00H
+		MOV P0M2, #0FFH
+		MOV P1M1, #00H
+		MOV P1M2, #0FFH
+		
+RS EQU P1.0
+RW EQU P1.1
+E  EQU P1.2
+
+		
+MAIN: MOV P0, #38H
+	  ACALL SEND_INSTRUCTION ;2 line and 5x7 matrix
+	  
+	  MOV P0, #0EH ;display on cursor blink
+	  ACALL SEND_DATA
+	  
+	  MOV P0, #01H ;clear display screen
+	  ACALL SEND_INSTRUCTION
+
+HERE: MOV P0, #80H ;FIRST LINE
+	  ACALL SEND_INSTRUCTION
+	  
+	  MOV P0, #'M'
+	  ACALL SEND_DATA
+	  MOV P0, #'A'
+	  ACALL SEND_DATA
+	  MOV P0, #'Y'
+	  ACALL SEND_DATA
+	  MOV P0, #'U'
+	  ACALL SEND_DATA
+	  MOV P0, #'R'
+	  ACALL SEND_DATA
+	  
+	  MOV P0, #0C0H ;FORCE CURSOR TO 2ND LINE
+	  ACALL SEND_DATA
+	  
+	  MOV P0, #'P'
+	  ACALL SEND_DATA
+	  MOV P0, #'A'
+	  ACALL SEND_DATA
+	  MOV P0, #'T'
+	  ACALL SEND_DATA
+	  MOV P0, #'I'
+	  ACALL SEND_DATA
+	  MOV P0, #'L'
+	  ACALL SEND_DATA
+	  SJMP HERE
+	  
+SEND_INSTRUCTION: CLR RW
+				  CLR RS
+				  SETB E
+				  ACALL DELAY
+				  CLR E
+				  RET
+				  
+SEND_DATA:		  CLR RW
+				  SETB RS
+				  SETB E
+				  ACALL DELAY
+				  CLR E
+				  RET
+				  		
+DELAY: MOV R0, #10
+Here2: MOV R1, #255
+Here1: DJNZ R1, Here1
+	   DJNZ R0, Here2
+	   RET
+	   END
