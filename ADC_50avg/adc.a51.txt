@@ -1,0 +1,265 @@
+ORG 000H
+
+
+P0M1 EQU 0B1H
+
+P0M2 EQU 0B2H
+
+P1M1 EQU 0B3H
+
+P1M2 EQU 0B4H
+
+P3M1 EQU 0ACH
+
+P3M2 EQU 0ADH
+
+ADCCON0 EQU 0E8H
+
+ADCCON1 EQU 0E1H  
+
+ADCF EQU 0EFH
+
+ADCS EQU 0EEH
+
+ADCRH EQU 0C3H
+
+ADCRL EQU 0C2H
+
+ADCEN EQU 0E1H
+
+
+MOV P0M1,#0H       ; OUTPUT MODE  
+
+MOV P0M2,#0FFH       
+
+
+MOV P1M1,#0H        ; OUTPUT MODE
+
+MOV P1M2,#0FFH            
+
+
+MOV P3M1,#0FFH      ; INPUT MODE
+
+MOV P3M2,#0H            
+
+
+MOV DPTR,#Seven_segment  ; Move #Seven_segment to DPTR 18-bit register
+
+
+; ADC Setup
+
+ORL ADCCON0,#00000001B       ; Channel select 1 because input pin P3.0/AIN1
+
+ORL ADCCON1,#00000001B       ; Enable channel pin
+
+
+; ADC Read
+
+BACK:
+
+  CLR ADCF              ; Clear flag
+
+  SETB ADCS             ; Start ADC
+
+LABEL:JNB ADCF,LABEL        ; Checking overflow flag 
+
+  MOV R0,#3FH          ; High byte 
+
+  MOV R1,#0FH          ; Low byte 
+
+
+; Hex to Decimal
+
+MOV A,R0          ; A = Higher byte
+
+MOV B,#0AH        ; B = 10D
+
+DIV AB            ; DIV A/B 
+
+MOV 050,A         ; Move A to 050(01)
+
+MOV 051,B         ; Move B to 051(05) 
+
+  
+
+MOV A,R1          ; A = Lower byte
+
+MOV B,#0AH        ; B = 10D
+
+DIV AB            ; DIV A/B (Ans. A=1 B=5)
+
+MOV 052,A         ; Move A data to 052(01)
+
+MOV 053,B         ; Move B to 053(05) 
+
+
+MOV A,R1          ; A = Lower byte
+
+MOV B,#0AH        ; B = 10D
+
+DIV AB            ; DIV A/B (Ans. A=1 B=5)
+
+MOV 054,A         ; Move A data to 054(01)
+
+MOV 055,B         ; Move B to 055(05) 
+
+
+; Mul.. 16^2
+
+MOV 056,#2
+
+MOV 057,#5
+
+MOV 058,#6
+
+
+MOV A,058                ; A = 6
+
+MOV B,051                ; B = 5
+
+MUL AB                   ; A = 1E(30D)
+
+MOV B,#0AH               ; B = 0AH
+
+DIV AB                   ; 1E/0A Ans. A=3, B=0
+
+MOV 059,A                ; Move A data to 059(3) --Carry
+
+MOV 060,B                ; Move B data to 060(0)
+
+
+MOV A,057                ; A = 5
+
+MOV B,051                ; B = 5
+
+MUL AB                   ; A = 25
+
+ADD A,059                ; A = 28
+
+MOV B,#0AH               ; B = 0AH
+
+DIV AB                   ; DIV 1C/0A Ans. A=2, B=8
+
+MOV 061,A                ; Move A data to 061(2) --Carry
+
+MOV 062,B                ; Move B data to 062(8)
+
+
+MOV A,056                ; A = 2
+
+MOV B,051                ; B = 5
+
+MUL AB                   ; A = 10
+
+ADD A,061                ; A = 12
+
+MOV B,#0AH               ; B = 0AH
+
+DIV AB                   ; DIV C/0A Ans. A=1, B=2
+
+MOV 063,A                ; Move A data to 063(1) --Carry
+
+MOV 064,B                ; Move B data to 064(2)
+
+
+MOV A,058                ; A = 6
+
+MOV B,050                ; B = 1
+
+MUL AB                   ; A = 6
+
+MOV 065,A                ; Move A data to 065(6)
+
+
+MOV A,057                ; A = 5
+
+MOV B,050                ; B = 1
+
+MUL AB                   ; A = 5
+
+MOV 066,A                ; Move A data to 066(5)
+
+
+MOV A,056                ; A = 2
+
+MOV B,050                ; B = 1
+
+MUL AB                   ; A = 2
+
+MOV 067,A                ; Move A data to 067(2)
+
+
+; Addition
+
+MOV A,062                ; A = 8
+
+MOV B,065                ; B = 5
+
+ADD A,B                  ; A = 8 + 6 = 14
+
+MOV B,#0AH               ; B = 0AH
+
+DIV AB                   ; E/0A Ans. A=1, B=4
+
+MOV 068,A                ; Move A data to 068(1) --Carry
+
+MOV 069,B                ; Move B data to 069(4)
+
+
+MOV A,064                ; A = 2
+
+MOV B,066                ; B = 5
+
+ADD A,B                  ; A = 2 + 5 = 7
+
+ADD A,068                ; A = 7 + 1 = 8
+
+MOV B,#0AH               ; B = 0AH
+
+DIV AB                   ; 8/0A Ans. A=0, B=8
+
+MOV 070,A                ; Move A data to 070(0) --Carry
+
+MOV 071,B                ; Move B data to 071(8)
+
+
+MOV A,063                ; A = 1
+
+MOV B,067                ; B = 2
+
+ADD A,B                  ; A = 1 + 2 = 3
+
+ADD A,070                ; A = 3 + 0 = 3
+
+MOV 072,A                ; Move A data to 072(3)
+
+
+; 2nd Term 16^1
+
+MOV 073,#1
+
+MOV 074,#6
+
+
+MOV A,074                ; A = 6
+
+MOV B,053                ; B = 5
+
+MUL AB                   ; A = 1E(30D)
+
+MOV B,#0AH               ; B = 0AH
+
+DIV AB                   ; 1E/0A Ans. A=3, B=0
+
+MOV 075,A                ; Move A data to 075(3) --Carry
+
+MOV 076,B                ; Move B data to 076(0)
+
+
+MOV A,073                ; A = 1
+
+MOV B,053                ; B = 5
+
+MUL AB                   ; A = 4
+
+ADD A
